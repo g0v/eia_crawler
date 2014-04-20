@@ -11,5 +11,6 @@ BOT_NAME = 'eia_crawler'
 SPIDER_MODULES = ['eia_crawler.spiders']
 NEWSPIDER_MODULE = 'eia_crawler.spiders'
 
+DOWNLOAD_DELAY = 5
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'eia_crawler (+http://www.yourdomain.com)'
