@@ -28,11 +28,11 @@ class ReportSpider(BaseSpider):
         # Entry the last page
         #yield self._make_form_request(response,'Last',self.parse_last_page)
 
-    self.last_page_num = 343
+        self.last_page_num = 343
 
-    for i in range(1,self.last_page_num+1):
-        print 'Parse current page: ' + str(i)
-        yield self._make_form_request(response,i,self.parse_report_list)
+        for i in range(1,self.last_page_num+1):
+            print 'Parse current page: ' + str(i)
+            yield self._make_form_request(response,i,self.parse_report_list)
 
     def parse_report_list(self,response):
         #selector = HtmlXPathSelector(reponse)
