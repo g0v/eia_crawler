@@ -7,7 +7,7 @@ class ReportSpider(BaseSpider):
     name = "report"
     allowed_domains = ["epa.gov.tw"]
     start_urls = [
-	"http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
+    "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
     ]
     last_page_num = -1
 
@@ -15,28 +15,28 @@ class ReportSpider(BaseSpider):
         return {
             '__EVENTTARGET':'gvAbstract',
             '__EVENTARGUMENT':'Page$' + str(page_count)
-            
+
         }
 
     def _make_form_request(self,response,page_count,callback_func):
         return FormRequest.from_response(response,
-            formdata = self._make_formdata(page_count), 
-            callback = callback_func         
+            formdata = self._make_formdata(page_count),
+            callback = callback_func
         )
- 
+
     def parse(self,response):
         # Entry the last page
-	#yield self._make_form_request(response,'Last',self.parse_last_page)
+        #yield self._make_form_request(response,'Last',self.parse_last_page)
 
-	self.last_page_num = 343
+    self.last_page_num = 343
 
-	for i in range(1,self.last_page_num+1):
-            print 'Parse current page: ' + str(i)
-            yield self._make_form_request(response,i,self.parse_report_list)
-        
+    for i in range(1,self.last_page_num+1):
+        print 'Parse current page: ' + str(i)
+        yield self._make_form_request(response,i,self.parse_report_list)
+
     def parse_report_list(self,response):
         #selector = HtmlXPathSelector(reponse)
-       	open(str(time()),'wb').write(response.body) 
+       	open(str(time()),'wb').write(response.body)
         pass;
 
     def parse_report_summary(self,response):
