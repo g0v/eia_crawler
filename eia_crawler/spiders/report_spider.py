@@ -9,18 +9,26 @@ class ReportSpider(Spider):
     start_urls = [
     "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
     ]
-    last_page_num = -1
+    last_page_num = 343
 
-    def _make_formdata(self,page_count):
+    def _make_formdata(self,page_count,view_state,event_validation):
         return {
             '__EVENTTARGET':'gvAbstract',
-            '__EVENTARGUMENT':'Page$' + str(page_count)
+            '__EVENTARGUMENT':'Page$' + str(page_count),
+            '__VIEWSTATE': view_state,
+            '__EVENTVALIDATION': event_validation
         }
 
     def _make_form_request(self,response,page_count,callback_func):
+        selector = Selector(response)
+        view_state = selector.xpath("//input[@id='__VIEWSTATE']/@value").extract()[0]
+        event_validation = selector.xpath("//input[@id='__EVENTVALIDATION']/@value").extract()[0]
+
         return FormRequest.from_response(response,
-            formdata = self._make_formdata(page_count),
+            formdata = self._make_formdata(page_count,view_state,
+            event_validation),
             meta = {'current': page_count},
+            dont_click = True,
             callback = callback_func
         )
 
@@ -34,8 +42,9 @@ class ReportSpider(Spider):
             yield self._make_form_request(response,i,self.parse_report_list)
 
     def parse_report_list(self,response):
-        current = response.meta.get('current',0);
-       	open(str(current),'wb').write(response.body)
+        current = int(response.meta.get('current',0));
+        open('results/%s' % (str(current)),'wb').write(response.body)
+        return
         pass;
 
     def parse_report_summary(self,response):
