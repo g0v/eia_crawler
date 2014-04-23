@@ -7,38 +7,38 @@ class ReportSpider(Spider):
     name = "report"
     allowed_domains = ["epa.gov.tw"]
     start_urls = [
-    "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
+        "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
     ]
-    last_page_num = -1
+    last_page_num = 343
 
     def _make_formdata(self,page_count):
         return {
             '__EVENTTARGET':'gvAbstract',
-            '__EVENTARGUMENT':'Page$' + str(page_count)
+            '__EVENTARGUMENT':'Page$' + str(page_count),
         }
 
     def _make_form_request(self,response,page_count,callback_func):
         return FormRequest.from_response(response,
             formdata = self._make_formdata(page_count),
-            meta = {'current': page_count},
+            meta = {
+                'current' : page_count
+            },
             callback = callback_func
         )
 
     def parse(self,response):
         # Entry the last page
-        #yield self._make_form_request(response,'Last',self.parse_last_page)
-
-        self.last_page_num = 343
-
-        for i in range(1,self.last_page_num+1):
-            yield self._make_form_request(response,i,self.parse_report_list)
+        yield self._make_form_request(response,11,self.parse_report_list)
 
     def parse_report_list(self,response):
-        current = response.meta.get('current',0);
-       	open(str(current),'wb').write(response.body)
-        pass;
+        current = int(response.meta.get('current',0));
+        if (current < 50):
+            yield self._make_form_request(response,current+10,self.parse_report_list)
+        open('results/%s' % (str(current)),'wb').write(response.body)
+        return
 
     def parse_report_summary(self,response):
+        print response.body
         pass;
 
     def parse_last_page(self,response):
