@@ -42,8 +42,34 @@ class ReportSpider(Spider):
         return
 
     def parse_report_summary(self,response):
-        print response.body
-        pass;
+        Sel = Selector(response)
+        rowSelList =
+        Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']").extract()
+        items = []
+
+        getAttr = lambda selector,pattern: selector.xpath(pattern).extract()[0]
+        patterns = {
+            'HCODE': "td/span[contains[@id,'HCODE']/text()",
+            'DST': "td/span[contains[@id,'DST']/text()",
+            'EDN':"td/span[contains[@id,'EDN']/@title"
+            'DOCTYPE': "td/span[contains[@id,'DOCTYPE']/text()",
+            'PER': "td[6]/text()",
+            'EXTP': "td/span[contains[@id,'EXTP']/text()",
+            'NOTES': "td/span[contains[@id,'NOTES']/text()"
+        }
+
+        for rowSel in rowSelList:
+            item = ReportSummaryItem()
+            item['HCODE'] = getAttr(rowSel,patterns['HCODE'])
+            item['DST'] = getAttr(rowSel,patterns['DST'])
+            item['EDN'] = getAttr(rowSel,patterns['EDN'])
+            item['DOCTYPE'] = getAttr(rowSel,patterns['DOCTYPE'])
+            item['PER'] = getAttr(rowSel,patterns['PER'])
+            item['EXTP'] = getAttr(rowSel,patterns['EXTP'])
+            item['NOTES'] = getAttr(rowSel,patterns['NOTES'])
+            items.append(item)
+
+        return items
 
     def parse_last_page_num(self,response):
         selector = Selector(response)
