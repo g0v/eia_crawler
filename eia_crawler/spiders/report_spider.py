@@ -2,6 +2,7 @@ from time import time
 from scrapy.spider import Spider
 from scrapy.selector import Selector
 from scrapy.http import FormRequest
+from eia_crawler.items import ReportSummaryItem
 
 class ReportSpider(Spider):
     name = "report"
@@ -33,29 +34,30 @@ class ReportSpider(Spider):
 
     def parse_report_list(self,response):
         current = int(response.meta.get('current',0));
-        open('results/%s' % (str(current)),'wb').write(response.body)
+        #open('results/%s' % (str(current)),'wb').write(response.body)
 
         if (current > self.last_page_num):
             return
         else:
             yield self._make_form_request(response,current+1,self.parse_report_list)
-        return
 
     def parse_report_summary(self,response):
         Sel = Selector(response)
-        rowSelList =
-        Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']").extract()
+        rowSelList = Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']")
         items = []
 
-        getAttr = lambda selector,pattern: selector.xpath(pattern).extract()[0]
+        def getAttr(selector,pattern):
+            result = selector.xpath(pattern).extract()
+            return result[0] if (len(result)>1) else ''
+
         patterns = {
-            'HCODE': "td/span[contains[@id,'HCODE']/text()",
-            'DST': "td/span[contains[@id,'DST']/text()",
-            'EDN':"td/span[contains[@id,'EDN']/@title"
-            'DOCTYPE': "td/span[contains[@id,'DOCTYPE']/text()",
+            'HCODE': "td/span[contains(@id,'HCODE')]/text()",
+            'DST': "td/span[contains(@id,'DST')]/text()",
+            'EDN':"td/span[contains(@id,'EDN')]/@title",
+            'DOCTYPE': "td/span[contains(@id,'DOCTYPE')]/text()",
             'PER': "td[6]/text()",
-            'EXTP': "td/span[contains[@id,'EXTP']/text()",
-            'NOTES': "td/span[contains[@id,'NOTES']/text()"
+            'EXTP': "td/span[contains(@id,'EXTP')]/text()",
+            'NOTES': "td/span[contains(@id,'NOTES')]/@title"
         }
 
         for rowSel in rowSelList:

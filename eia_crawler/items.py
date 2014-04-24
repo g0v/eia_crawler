@@ -5,9 +5,13 @@
 
 from scrapy.item import Item, Field
 
-class EiaCrawlerItem(Item):
+class ReportSummaryItem(Item):
     # define the fields for your item here like:
-    title = Field()
-    link = Field()
-    desc = Field()
+    HCODE = Field()
+    DST = Field()
+    EDN = Field()
+    DOCTYPE = Field()
+    PER = Field()
+    EXTP = Field()
+    NOTES = Field()
     pass
