@@ -28,28 +28,25 @@ class ReportSpider(Spider):
 
     def parse(self,response):
         # Entry the last page
-        yield self._make_form_request(response,11,self.parse_report_list)
+        # yield self._make_form_request(response,'Last',self.parse_last_page_num)
+        yield self._make_form_request(response,2,self.parse_report_list)
 
     def parse_report_list(self,response):
         current = int(response.meta.get('current',0));
-        if (current < 50):
-            yield self._make_form_request(response,current+10,self.parse_report_list)
         open('results/%s' % (str(current)),'wb').write(response.body)
+
+        if (current > self.last_page_num):
+            return
+        else:
+            yield self._make_form_request(response,current+1,self.parse_report_list)
         return
 
     def parse_report_summary(self,response):
         print response.body
         pass;
 
-    def parse_last_page(self,response):
+    def parse_last_page_num(self,response):
         selector = Selector(response)
         pages = selector.xpath("//a[contains(@href,'gvAbstract')]/text()").extract()
         self.last_page_num = int(pages[-1])+1
-
-        # Go to each page and parse it
-        for i in range(1,self.last_page_num+1):
-            print 'Parse current page: ' + str(i)
-            yield self._make_form_request(response,i,self.parse_report_list)
-
-        pass;
-
+        return
