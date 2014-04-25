@@ -13,6 +13,17 @@ class ReportSpider(Spider):
     ]
     last_page_num = 22
 
+    patterns = {
+            'HCODE': "td/span[contains(@id,'HCODE')]/text()",
+            'DST': "td/span[contains(@id,'DST')]/text()",
+            'EDN':"td/span[contains(@id,'EDN')]/@title",
+            'DOCTYPE': "td/span[contains(@id,'DOCTYPE')]/text()",
+            'PER': "td[6]/text()",
+            'EXTP': "td/span[contains(@id,'EXTP')]/text()",
+            'NOTES': "td/span[contains(@id,'NOTES')]/@title"
+    }
+
+
     def _make_formdata(self,page_count):
         return {
             '__EVENTTARGET':'gvAbstract',
@@ -27,6 +38,30 @@ class ReportSpider(Spider):
             },
             callback = callback_func
         )
+
+    def _make_report_summary_items(self,response):
+        Sel = Selector(response)
+        rowSelList = Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']")
+        items = []
+
+        def getAttr(selector,pattern):
+            result = selector.xpath(pattern).extract()
+            return result[0].encode('utf-8') if (len(result)>0) else ''
+
+        patterns = self.patterns
+
+        for rowSel in rowSelList:
+            item = {}
+            item['HCODE'] = getAttr(rowSel,patterns['HCODE'])
+            item['DST'] = getAttr(rowSel,patterns['DST'])
+            item['EDN'] = getAttr(rowSel,patterns['EDN'])
+            item['DOCTYPE'] = getAttr(rowSel,patterns['DOCTYPE'])
+            item['PER'] = getAttr(rowSel,patterns['PER'])
+            item['EXTP'] = getAttr(rowSel,patterns['EXTP'])
+            item['NOTES'] = getAttr(rowSel,patterns['NOTES'])
+            items.append(item)
+
+        return items
 
     def parse(self,response):
         # Entry the last page
@@ -49,37 +84,10 @@ class ReportSpider(Spider):
         current = int(response.meta.get('current',0));
         #open('results/%s' % (str(current)),'wb').write(response.body)
 
-        Sel = Selector(response)
-        rowSelList = Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']")
-        items = []
-
-        def getAttr(selector,pattern):
-            result = selector.xpath(pattern).extract()
-            return result[0] if (len(result)>1) else ''
-
-        patterns = {
-            'HCODE': "td/span[contains(@id,'HCODE')]/text()",
-            'DST': "td/span[contains(@id,'DST')]/text()",
-            'EDN':"td/span[contains(@id,'EDN')]/@title",
-            'DOCTYPE': "td/span[contains(@id,'DOCTYPE')]/text()",
-            'PER': "td[6]/text()",
-            'EXTP': "td/span[contains(@id,'EXTP')]/text()",
-            'NOTES': "td/span[contains(@id,'NOTES')]/@title"
-        }
-
-        for rowSel in rowSelList:
-            item = {}
-            item['HCODE'] = getAttr(rowSel,patterns['HCODE'])
-            item['DST'] = getAttr(rowSel,patterns['DST'])
-            item['EDN'] = getAttr(rowSel,patterns['EDN'])
-            item['DOCTYPE'] = getAttr(rowSel,patterns['DOCTYPE'])
-            item['PER'] = getAttr(rowSel,patterns['PER'])
-            item['EXTP'] = getAttr(rowSel,patterns['EXTP'])
-            item['NOTES'] = getAttr(rowSel,patterns['NOTES'])
-            items.append(item)
+        items = self._make_report_summary_items(response)
 
         with open('results/%s.csv' % (str(current)),'wb') as f:
-            w = csv.DictWriter(f,patterns.keys())
+            w = csv.DictWriter(f,self.patterns.keys())
             w.writeheader()
             w.writerows(items)
 
