@@ -1,3 +1,4 @@
+import csv
 from time import time
 from scrapy.spider import Spider
 from scrapy.selector import Selector
@@ -10,7 +11,7 @@ class ReportSpider(Spider):
     start_urls = [
         "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
     ]
-    last_page_num = 343
+    last_page_num = 22
 
     def _make_formdata(self,page_count):
         return {
@@ -30,18 +31,24 @@ class ReportSpider(Spider):
     def parse(self,response):
         # Entry the last page
         # yield self._make_form_request(response,'Last',self.parse_last_page_num)
-        yield self._make_form_request(response,2,self.parse_report_list)
+        yield self._make_form_request(response,2,self.parse_report_summary)
 
     def parse_report_list(self,response):
         current = int(response.meta.get('current',0));
         #open('results/%s' % (str(current)),'wb').write(response.body)
 
-        if (current > self.last_page_num):
-            return
-        else:
+        for item in self.parse_report_summary(response):
+            open('results/%s' % (str(current)),'wb').write(str(item))
+
+
+        if (current < self.last_page_num):
             yield self._make_form_request(response,current+1,self.parse_report_list)
+        return
 
     def parse_report_summary(self,response):
+        current = int(response.meta.get('current',0));
+        #open('results/%s' % (str(current)),'wb').write(response.body)
+
         Sel = Selector(response)
         rowSelList = Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']")
         items = []
@@ -61,7 +68,7 @@ class ReportSpider(Spider):
         }
 
         for rowSel in rowSelList:
-            item = ReportSummaryItem()
+            item = {}
             item['HCODE'] = getAttr(rowSel,patterns['HCODE'])
             item['DST'] = getAttr(rowSel,patterns['DST'])
             item['EDN'] = getAttr(rowSel,patterns['EDN'])
@@ -71,7 +78,13 @@ class ReportSpider(Spider):
             item['NOTES'] = getAttr(rowSel,patterns['NOTES'])
             items.append(item)
 
-        return items
+        with open('results/%s.csv' % (str(current)),'wb') as f:
+            w = csv.DictWriter(f,patterns.keys())
+            w.writeheader()
+            w.writerows(items)
+
+        if (current < self.last_page_num):
+            yield self._make_form_request(response,current+1,self.parse_report_list)
 
     def parse_last_page_num(self,response):
         selector = Selector(response)
