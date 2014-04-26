@@ -6,12 +6,14 @@ from scrapy.http import FormRequest
 from eia_crawler.items import ReportSummaryItem
 
 class ReportSpider(Spider):
+    LIST_FOLDER = 'results/list'
+
     name = "report"
     allowed_domains = ["epa.gov.tw"]
     start_urls = [
         "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
     ]
-    last_page_num = 22
+    last_page_num = -1
 
     patterns = {
             'HCODE': "td/span[contains(@id,'HCODE')]/text()",
@@ -23,6 +25,18 @@ class ReportSpider(Spider):
             'NOTES': "td/span[contains(@id,'NOTES')]/@title"
     }
 
+    def __init__(self, *args, **kwargs):
+        super(ReportSpider,self).__init__(*args, **kwargs)
+
+        self.fout = open('%s/%s.csv' % (self.LIST_FOLDER,'result'),'wb')
+        self.writer = csv.DictWriter(self.fout,self.patterns.keys())
+        self.writer.writeheader()
+        pass
+
+    def __del__(self):
+        super(ReportSpider,self).__del()
+        self.fout.close()
+        pass
 
     def _make_formdata(self,page_count):
         return {
@@ -39,7 +53,7 @@ class ReportSpider(Spider):
             callback = callback_func
         )
 
-    def _make_report_summary_items(self,response):
+    def _make_report_list_items(self,response):
         Sel = Selector(response)
         rowSelList = Sel.xpath("//table[@id='gvAbstract']/tr[@class='gridRow']")
         items = []
@@ -63,36 +77,38 @@ class ReportSpider(Spider):
 
         return items
 
+    def _write_report_list_items(self,items):
+        self.writer.writerows(items)
+        pass
+
+
     def parse(self,response):
         # Entry the last page
-        # yield self._make_form_request(response,'Last',self.parse_last_page_num)
-        yield self._make_form_request(response,2,self.parse_report_summary)
+        yield self._make_form_request(response,'Last',self.parse_last_page_num)
+        # store page one items
+        items = self._make_report_list_items(response)
+        self._write_report_list_items(items)
+
+        # entry the next page
+        yield self._make_form_request(response,2,self.parse_report_list)
+
+        pass
 
     def parse_report_list(self,response):
-        current = int(response.meta.get('current',0));
+        current = int(response.meta.get('current',1));
+        print "Current page:%d Last page: %d\n" %(current,self.last_page_num)
+
         #open('results/%s' % (str(current)),'wb').write(response.body)
 
-        for item in self.parse_report_summary(response):
-            open('results/%s' % (str(current)),'wb').write(str(item))
+        items = self._make_report_list_items(response)
 
+        self._write_report_list_items(items)
 
+        # go ahead next page
         if (current < self.last_page_num):
             yield self._make_form_request(response,current+1,self.parse_report_list)
-        return
 
-    def parse_report_summary(self,response):
-        current = int(response.meta.get('current',0));
-        #open('results/%s' % (str(current)),'wb').write(response.body)
-
-        items = self._make_report_summary_items(response)
-
-        with open('results/%s.csv' % (str(current)),'wb') as f:
-            w = csv.DictWriter(f,self.patterns.keys())
-            w.writeheader()
-            w.writerows(items)
-
-        if (current < self.last_page_num):
-            yield self._make_form_request(response,current+1,self.parse_report_list)
+        pass
 
     def parse_last_page_num(self,response):
         selector = Selector(response)
