@@ -1,9 +1,7 @@
 import csv
-from time import time
 from scrapy.spider import Spider
 from scrapy.selector import Selector
 from scrapy.http import FormRequest
-from eia_crawler.items import ReportSummaryItem
 
 class ReportSpider(Spider):
     LIST_FOLDER = 'results/list'
@@ -27,15 +25,18 @@ class ReportSpider(Spider):
 
     def __init__(self, *args, **kwargs):
         super(ReportSpider,self).__init__(*args, **kwargs)
-
+        
         self.fout = open('%s/%s.csv' % (self.LIST_FOLDER,'result'),'wb')
         self.writer = csv.DictWriter(self.fout,self.patterns.keys())
         self.writer.writeheader()
+
         pass
 
     def __del__(self):
         super(ReportSpider,self).__del()
+
         self.fout.close()
+
         pass
 
     def _make_formdata(self,page_count):
@@ -79,6 +80,7 @@ class ReportSpider(Spider):
 
     def _write_report_list_items(self,items):
         self.writer.writerows(items)
+
         pass
 
 
@@ -114,4 +116,5 @@ class ReportSpider(Spider):
         selector = Selector(response)
         pages = selector.xpath("//a[contains(@href,'gvAbstract')]/text()").extract()
         self.last_page_num = int(pages[-1])+1
+
         return
