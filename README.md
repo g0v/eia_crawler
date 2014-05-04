@@ -12,6 +12,7 @@
 
 ``` bash
 $ scrapy crawl report
+$ scrapy crawl detail
 ```
 
 ## License 
