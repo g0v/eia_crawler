@@ -25,7 +25,7 @@ class ReportSpider(Spider):
 
     def __init__(self, *args, **kwargs):
         super(ReportSpider,self).__init__(*args, **kwargs)
-        
+
         self.fout = open('%s/%s.csv' % (self.LIST_FOLDER,'result'),'wb')
         self.writer = csv.DictWriter(self.fout,self.patterns.keys())
         self.writer.writeheader()
