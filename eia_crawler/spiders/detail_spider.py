@@ -1,3 +1,4 @@
+import csv
 from scrapy.spider import Spider
 from scrapy.selector import Selector
 from scrapy.http import Request
@@ -6,6 +7,9 @@ make_input_pattern_string = lambda id: "//input[contains(@id,'%s')]/@value" % (i
 make_span_pattern_string = lambda id: "//span[contains(@id,'%s')]/text()" % (id)
 
 class DetailSpider(Spider):
+    LIST_FOLDER = 'results/list'
+    DETAIL_FOLDER = 'results/detail'
+
     name = 'detail'
     allowed_domains = ["epa.gov.tw"]
 
@@ -29,11 +33,25 @@ class DetailSpider(Spider):
 
     def __init__(self, hcode=None, *args, **kwargs):
         super(DetailSpider,self).__init__(*args,**kwargs)
-        hcode = '1030536A' # Fake hcode
 
-        self.start_urls =[
-            "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
-        ]
+        if hcode:
+            hcode = '1030536A' # Fake hcode
+
+        # TODO : read the hcode from the list/result.csv file and generate all start_urls
+        self.start_urls = [];
+
+        with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
+            reader = csv.DictReader(f)
+                  
+            i = 0
+            for row in reader:
+                if (i>5):
+                    break
+                else:
+                    i = i+1
+                hcode = row['HCODE']
+                url = "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
+                self.start_urls.append(url)
 
         pass
 
@@ -42,13 +60,14 @@ class DetailSpider(Spider):
 
         # go to the detail page
         yield Request("http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
-                    callback=self.parse_detail)
+                        callback=self.parse_detail)
 
         pass
 
     def parse_detail(self,response):
         # print response.body
         
+        # get the attribute of field
         def getAttr(selector,pattern):
             result = selector.xpath(pattern).extract()
             return result[0].encode('utf8') if (len(result)>0) else ''
@@ -56,6 +75,7 @@ class DetailSpider(Spider):
         Sel = Selector(response)
 
         item = {}
+
         for attr,pattern in self.patterns.iteritems():
             item[attr] = getAttr(Sel,pattern)
             print attr,item[attr]
