@@ -67,13 +67,10 @@ class ReportSpider(Spider):
 
         for rowSel in rowSelList:
             item = {}
-            item['HCODE'] = getAttr(rowSel,patterns['HCODE'])
-            item['DST'] = getAttr(rowSel,patterns['DST'])
-            item['EDN'] = getAttr(rowSel,patterns['EDN'])
-            item['DOCTYPE'] = getAttr(rowSel,patterns['DOCTYPE'])
-            item['PER'] = getAttr(rowSel,patterns['PER'])
-            item['EXTP'] = getAttr(rowSel,patterns['EXTP'])
-            item['NOTES'] = getAttr(rowSel,patterns['NOTES'])
+
+            for attr,pattern in self.patterns.iteritems():
+                item[attr] = getAttr(rowSel,pattern)
+
             items.append(item)
 
         return items
@@ -87,6 +84,7 @@ class ReportSpider(Spider):
     def parse(self,response):
         # Entry the last page
         yield self._make_form_request(response,'Last',self.parse_last_page_num)
+        
         # store page one items
         items = self._make_report_list_items(response)
         self._write_report_list_items(items)
@@ -99,8 +97,6 @@ class ReportSpider(Spider):
     def parse_report_list(self,response):
         current = int(response.meta.get('current',1));
         print "Current page:%d Last page: %d\n" %(current,self.last_page_num)
-
-        #open('results/%s' % (str(current)),'wb').write(response.body)
 
         items = self._make_report_list_items(response)
 
