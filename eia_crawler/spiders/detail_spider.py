@@ -1,3 +1,4 @@
+import csv
 from scrapy.spider import Spider
 from scrapy.selector import Selector
 from scrapy.http import Request
@@ -6,6 +7,9 @@ make_input_pattern_string = lambda id: "//input[contains(@id,'%s')]/@value" % (i
 make_span_pattern_string = lambda id: "//span[contains(@id,'%s')]/text()" % (id)
 
 class DetailSpider(Spider):
+    LIST_FOLDER = 'results/list'
+    DETAIL_FOLDER = 'results/detail'
+
     name = 'detail'
     allowed_domains = ["epa.gov.tw"]
 
@@ -27,28 +31,41 @@ class DetailSpider(Spider):
         'NOTES': make_input_pattern_string('txNOTES')
     }
 
-    def __init__(self, hcode=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(DetailSpider,self).__init__(*args,**kwargs)
-        hcode = '1030536A' # Fake hcode
 
-        self.start_urls =[
-            "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
-        ]
+        # read the hcode from the list/result.csv file and generate all start_urls
+        self.start_urls = [];
 
+        with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
+            reader = csv.DictReader(f)
+                  
+            for row in reader:
+                hcode = row['HCODE']
+                url = "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
+                self.start_urls.append(url)
+
+        self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
+        self.writer = csv.DictWriter(self.fout,self.patterns.keys())
+        self.writer.writeheader()
+
+        pass
+
+    def __del__(self):
+        super(DetailSpider,self).__del()
+
+        self.fout.close()
         pass
 
     def parse(self,response):
-        # print response.body
-
         # go to the detail page
         yield Request("http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
-                    callback=self.parse_detail)
+                        callback=self.parse_detail,dont_filter=True)
 
         pass
 
-    def parse_detail(self,response):
-        # print response.body
-        
+    def parse_detail(self,response):       
+        # get the attribute of field
         def getAttr(selector,pattern):
             result = selector.xpath(pattern).extract()
             return result[0].encode('utf8') if (len(result)>0) else ''
@@ -56,10 +73,11 @@ class DetailSpider(Spider):
         Sel = Selector(response)
 
         item = {}
+
         for attr,pattern in self.patterns.iteritems():
             item[attr] = getAttr(Sel,pattern)
-            print attr,item[attr]
-
+        
+        self.writer.writerow(item)
         pass
 
     pass
