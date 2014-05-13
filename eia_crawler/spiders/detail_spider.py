@@ -31,42 +31,40 @@ class DetailSpider(Spider):
         'NOTES': make_input_pattern_string('txNOTES')
     }
 
-    def __init__(self, hcode=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(DetailSpider,self).__init__(*args,**kwargs)
 
-        if hcode:
-            hcode = '1030536A' # Fake hcode
-
-        # TODO : read the hcode from the list/result.csv file and generate all start_urls
+        # read the hcode from the list/result.csv file and generate all start_urls
         self.start_urls = [];
 
         with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
             reader = csv.DictReader(f)
                   
-            i = 0
             for row in reader:
-                if (i>5):
-                    break
-                else:
-                    i = i+1
                 hcode = row['HCODE']
                 url = "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
                 self.start_urls.append(url)
 
+        self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
+        self.writer = csv.DictWriter(self.fout,self.patterns.keys())
+        self.writer.writeheader()
+
+        pass
+
+    def __del__(self):
+        super(DetailSpider,self).__del()
+
+        self.fout.close()
         pass
 
     def parse(self,response):
-        # print response.body
-
         # go to the detail page
         yield Request("http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
-                        callback=self.parse_detail)
+                        callback=self.parse_detail,dont_filter=True)
 
         pass
 
-    def parse_detail(self,response):
-        # print response.body
-        
+    def parse_detail(self,response):       
         # get the attribute of field
         def getAttr(selector,pattern):
             result = selector.xpath(pattern).extract()
@@ -78,8 +76,8 @@ class DetailSpider(Spider):
 
         for attr,pattern in self.patterns.iteritems():
             item[attr] = getAttr(Sel,pattern)
-            print attr,item[attr]
-
+        
+        self.writer.writerow(item)
         pass
 
     pass
