@@ -3,6 +3,8 @@ from scrapy.spider import Spider
 from scrapy.selector import Selector
 from scrapy.http import Request
 
+from urlparse import urlparse,parse_qs
+
 make_input_pattern_string = lambda id: "//input[contains(@id,'%s')]/@value" % (id)
 make_span_pattern_string = lambda id: "//span[contains(@id,'%s')]/text()" % (id)
 
@@ -46,7 +48,8 @@ class DetailSpider(Spider):
                 self.start_urls.append(url)
 
         self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
-        self.writer = csv.DictWriter(self.fout,self.patterns.keys())
+        header = ['HCODE'] + self.patterns.keys()
+        self.writer = csv.DictWriter(self.fout,header)
         self.writer.writeheader()
 
         pass
@@ -58,13 +61,17 @@ class DetailSpider(Spider):
         pass
 
     def parse(self,response):
+        query_string = urlparse(response.url).query
+        hcode = parse_qs(query_string)['hcode'][0]
+
         # go to the detail page
         yield Request("http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
+                        meta={'HCODE': hcode},
                         callback=self.parse_detail,dont_filter=True)
 
         pass
 
-    def parse_detail(self,response):       
+    def parse_detail(self,response):    
         # get the attribute of field
         def getAttr(selector,pattern):
             result = selector.xpath(pattern).extract()
@@ -73,6 +80,9 @@ class DetailSpider(Spider):
         Sel = Selector(response)
 
         item = {}
+        
+        hcode = response.meta['HCODE']   
+        item['HCODE'] = hcode
 
         for attr,pattern in self.patterns.iteritems():
             item[attr] = getAttr(Sel,pattern)
