@@ -27,8 +27,8 @@ $ scrapy crawl detail
 
 ## 產出結果
 
-+ results/list/result.csv
-+ results/detail/result.csv
++ [results/list/result.csv](results/list/result.csv)
++ [results/detail/result.csv](results/detail/result.csv)
 
 ## License 
 
