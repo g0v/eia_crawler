@@ -28,7 +28,20 @@ $ scrapy crawl detail
 ## 產出結果
 
 + [results/list/result.csv](results/list/result.csv)
+
+``` csv
+EXTP,DST,EDN,DOCTYPE,PER,HCODE,NOTES
+
+審查進度,環評機關,名稱,類別,承辦人,案號,說明
+```
+
 + [results/detail/result.csv](results/detail/result.csv)
+
+``` csv
+HCODE,DOCTYP,TAKER,DST,TRIA,DIRORG,DECAL,DSUNT,NOTES,SEDAT,EXTP,DEPN,COMIT,DSIZE,PORCS,DAREA
+
+案號,書件類別,承辨人,基地行政區,初審會日期,目的事業主管機關,開發計畫類別,,備註,繳費日期,審查結論別,開發單位名稱,委員會日期,開發規模,處理情形,基地面積
+```
 
 ## License 
 
