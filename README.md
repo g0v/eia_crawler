@@ -28,7 +28,20 @@ $ scrapy crawl detail
 ## 產出結果
 
 + [results/list/result.csv](results/list/result.csv)
+
+``` csv
+Id, Agency, Name, DocType, Taker, Status, Notes
+
+案號, 環評機關, 名稱, 類別, 承辦人, 審查進度,說明
+```
+
 + [results/detail/result.csv](results/detail/result.csv)
+
+``` csv
+Id, DocTYpe, DevUnit, Region, DevCategory, Area, Size, Unit, Taker, Agency, SendDate, Status, ExamineDate, ExamineStatus, CommitteeDate, Notes
+
+案號, 書件類別, 開發單位名稱, 基地行政區, 開發計畫類別, 基地面積, 開發規模, 開發規模單位, 承辨人, 目的事業主管機關, 繳費日期, 處理情形, 初審會日期, 審查結論別, 委員會日期, 備註
+```
 
 ## License 
 
