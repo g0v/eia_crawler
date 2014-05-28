@@ -14,13 +14,13 @@ class ReportSpider(Spider):
     last_page_num = -1
 
     patterns = {
-            'HCODE': "td/span[contains(@id,'HCODE')]/text()",
-            'DST': "td/span[contains(@id,'DST')]/text()",
-            'EDN':"td/span[contains(@id,'EDN')]/@title",
-            'DOCTYPE': "td/span[contains(@id,'DOCTYPE')]/text()",
-            'PER': "td[6]/text()",
-            'EXTP': "td/span[contains(@id,'EXTP')]/text()",
-            'NOTES': "td/span[contains(@id,'NOTES')]/@title"
+            'Id': "td/span[contains(@id,'HCODE')]/text()",
+            'Agency': "td/span[contains(@id,'DST')]/text()",
+            'Name':"td/span[contains(@id,'EDN')]/@title",
+            'DocType': "td/span[contains(@id,'DOCTYPE')]/text()",
+            'Taker': "td[6]/text()",
+            'Status': "td/span[contains(@id,'EXTP')]/text()",
+            'Notes': "td/span[contains(@id,'NOTES')]/@title"
     }
 
     def __init__(self, *args, **kwargs):
@@ -80,11 +80,10 @@ class ReportSpider(Spider):
 
         pass
 
-
     def parse(self,response):
         # Entry the last page
         yield self._make_form_request(response,'Last',self.parse_last_page_num)
-        
+
         # store page one items
         items = self._make_report_list_items(response)
         self._write_report_list_items(items)

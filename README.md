@@ -30,17 +30,17 @@ $ scrapy crawl detail
 + [results/list/result.csv](results/list/result.csv)
 
 ``` csv
-EXTP,DST,EDN,DOCTYPE,PER,HCODE,NOTES
+Id, Agency, Name, DocType, Taker, Status, Notes
 
-審查進度,環評機關,名稱,類別,承辦人,案號,說明
+案號, 環評機關, 名稱, 類別, 承辦人, 審查進度,說明
 ```
 
 + [results/detail/result.csv](results/detail/result.csv)
 
 ``` csv
-HCODE,DOCTYP,TAKER,DST,TRIA,DIRORG,DECAL,DSUNT,NOTES,SEDAT,EXTP,DEPN,COMIT,DSIZE,PORCS,DAREA
+Id, DocTYpe, DevUnit, Region, DevCategory, Area, Size, Unit, Taker, Agency, SendDate, Status, ExamineDate, ExamineStatus, CommitteeDate, Notes
 
-案號,書件類別,承辨人,基地行政區,初審會日期,目的事業主管機關,開發計畫類別,,備註,繳費日期,審查結論別,開發單位名稱,委員會日期,開發規模,處理情形,基地面積
+案號, 書件類別, 開發單位名稱, 基地行政區, 開發計畫類別, 基地面積, 開發規模, 開發規模單位, 承辨人, 目的事業主管機關, 繳費日期, 處理情形, 初審會日期, 審查結論別, 委員會日期, 備註
 ```
 
 ## License 

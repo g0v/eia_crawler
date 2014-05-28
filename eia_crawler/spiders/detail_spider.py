@@ -16,21 +16,21 @@ class DetailSpider(Spider):
     allowed_domains = ["epa.gov.tw"]
 
     patterns = {
-        'DOCTYP': make_span_pattern_string('lbDOCTYP'),
-        'DEPN': make_input_pattern_string('txDEPN'),
-        'DST': make_input_pattern_string('txDST'),
-        'DECAL': make_input_pattern_string('txDECAL'),
-        'DAREA': make_input_pattern_string('txDAREA'),
-        'DSIZE': make_input_pattern_string('txDSIZE'),
-        'DSUNT': make_input_pattern_string('txDSUNT'),
-        'TAKER': make_input_pattern_string('txTAKER'),
-        'DIRORG': make_input_pattern_string('txDIRORG'),
-        'SEDAT': make_input_pattern_string('txSEDAT'),
-        'PORCS': make_input_pattern_string('txPORCS'),
-        'TRIA': make_input_pattern_string('txTRIA'),
-        'EXTP': make_input_pattern_string('txEXTP'),
-        'COMIT': make_input_pattern_string('txCOMIT'),
-        'NOTES': make_input_pattern_string('txNOTES')
+        'DocType': make_span_pattern_string('lbDOCTYP'),
+        'DevUnit': make_input_pattern_string('txDEPN'),
+        'Region': make_input_pattern_string('txDST'),
+        'DevCategory': make_input_pattern_string('txDECAL'),
+        'Area': make_input_pattern_string('txDAREA'),
+        'Size': make_input_pattern_string('txDSIZE'),
+        'Unit': make_input_pattern_string('txDSUNT'),
+        'Taker': make_input_pattern_string('txTAKER'),
+        'Agency': make_input_pattern_string('txDIRORG'),
+        'SendDate': make_input_pattern_string('txSEDAT'),
+        'Status': make_input_pattern_string('txPORCS'),
+        'ExamineDate': make_input_pattern_string('txTRIA'),
+        'ExamineStatus': make_input_pattern_string('txEXTP'),
+        'CommitteeDate': make_input_pattern_string('txCOMIT'),
+        'Notes': make_input_pattern_string('txNOTES')
     }
 
     def __init__(self, *args, **kwargs):
@@ -41,14 +41,14 @@ class DetailSpider(Spider):
 
         with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
             reader = csv.DictReader(f)
-                  
+
             for row in reader:
-                hcode = row['HCODE']
+                hcode = row['Id']
                 url = "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
                 self.start_urls.append(url)
 
         self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
-        header = ['HCODE'] + self.patterns.keys()
+        header = ['Id'] + self.patterns.keys()
         self.writer = csv.DictWriter(self.fout,header)
         self.writer.writeheader()
 
@@ -71,7 +71,7 @@ class DetailSpider(Spider):
 
         pass
 
-    def parse_detail(self,response):    
+    def parse_detail(self,response):
         # get the attribute of field
         def getAttr(selector,pattern):
             result = selector.xpath(pattern).extract()
@@ -80,13 +80,13 @@ class DetailSpider(Spider):
         Sel = Selector(response)
 
         item = {}
-        
-        hcode = response.meta['HCODE']   
-        item['HCODE'] = hcode
+
+        hcode = response.meta['HCODE']
+        item['Id'] = hcode
 
         for attr,pattern in self.patterns.iteritems():
             item[attr] = getAttr(Sel,pattern)
-        
+
         self.writer.writerow(item)
         pass
 
