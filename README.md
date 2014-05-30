@@ -10,7 +10,13 @@
 
 ## Vagrant
 
-若是想用 Vagrant 也可以參考Gist上的 [Vagrant File](https://gist.github.com/dz1984/11130582)。
+若是想用 Vagrant 也可以參考Gist上的 [Vagrant File](https://gist.github.com/dz1984/11130582) (假設已經有vagrant環境)。
+
+``` shell
+$ wget https://gist.githubusercontent.com/dz1984/11130582/raw/Vagrantfile
+
+$ vagrant up
+```
 
 ## 使用方式
 
