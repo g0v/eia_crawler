@@ -14,41 +14,43 @@ class DetailSpider(Spider):
 
     name = 'detail'
     allowed_domains = ["epa.gov.tw"]
+    main_urls = []
 
     patterns = {
-        'DOCTYP': make_span_pattern_string('lbDOCTYP'),
-        'DEPN': make_input_pattern_string('txDEPN'),
-        'DST': make_input_pattern_string('txDST'),
-        'DECAL': make_input_pattern_string('txDECAL'),
-        'DAREA': make_input_pattern_string('txDAREA'),
-        'DSIZE': make_input_pattern_string('txDSIZE'),
-        'DSUNT': make_input_pattern_string('txDSUNT'),
-        'TAKER': make_input_pattern_string('txTAKER'),
-        'DIRORG': make_input_pattern_string('txDIRORG'),
-        'SEDAT': make_input_pattern_string('txSEDAT'),
-        'PORCS': make_input_pattern_string('txPORCS'),
-        'TRIA': make_input_pattern_string('txTRIA'),
-        'EXTP': make_input_pattern_string('txEXTP'),
-        'COMIT': make_input_pattern_string('txCOMIT'),
-        'NOTES': make_input_pattern_string('txNOTES')
+        'DocType': make_span_pattern_string('lbDOCTYP'),
+        'DevUnit': make_input_pattern_string('txDEPN'),
+        'Region': make_input_pattern_string('txDST'),
+        'DevCategory': make_input_pattern_string('txDECAL'),
+        'Area': make_input_pattern_string('txDAREA'),
+        'Size': make_input_pattern_string('txDSIZE'),
+        'Unit': make_input_pattern_string('txDSUNT'),
+        'Taker': make_input_pattern_string('txTAKER'),
+        'Agency': make_input_pattern_string('txDIRORG'),
+        'SendDate': make_input_pattern_string('txSEDAT'),
+        'Status': make_input_pattern_string('txPORCS'),
+        'ExamineDate': make_input_pattern_string('txTRIA'),
+        'ExamineStatus': make_input_pattern_string('txEXTP'),
+        'CommitteeDate': make_input_pattern_string('txCOMIT'),
+        'Notes': make_input_pattern_string('txNOTES')
     }
 
     def __init__(self, *args, **kwargs):
         super(DetailSpider,self).__init__(*args,**kwargs)
 
         # read the hcode from the list/result.csv file and generate all start_urls
-        self.start_urls = [];
-
         with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
             reader = csv.DictReader(f)
-                  
+
             for row in reader:
-                hcode = row['HCODE']
+                hcode = row['Id']
                 url = "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
-                self.start_urls.append(url)
+                self.main_urls.append(url)
+
+        first_url = self.main_urls.pop()
+        self.start_urls.append(first_url)
 
         self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
-        header = ['HCODE'] + self.patterns.keys()
+        header = ['Id'] + self.patterns.keys()
         self.writer = csv.DictWriter(self.fout,header)
         self.writer.writeheader()
 
@@ -65,13 +67,22 @@ class DetailSpider(Spider):
         hcode = parse_qs(query_string)['hcode'][0]
 
         # go to the detail page
-        yield Request("http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
+        yield Request(  url="http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
                         meta={'HCODE': hcode},
-                        callback=self.parse_detail,dont_filter=True)
+                        priority=100,
+                        callback=self.parse_detail,
+                        dont_filter=True)
 
+        # go to next hcode
+        if (len(self.main_urls)==0):
+            return
+            
+        next_url = self.main_urls.pop()
+        yield Request(  url=next_url,
+                        callback=self.parse)
         pass
 
-    def parse_detail(self,response):    
+    def parse_detail(self,response):
         # get the attribute of field
         def getAttr(selector,pattern):
             result = selector.xpath(pattern).extract()
@@ -80,13 +91,13 @@ class DetailSpider(Spider):
         Sel = Selector(response)
 
         item = {}
-        
-        hcode = response.meta['HCODE']   
-        item['HCODE'] = hcode
+
+        hcode = response.meta['HCODE']
+        item['Id'] = hcode
 
         for attr,pattern in self.patterns.iteritems():
             item[attr] = getAttr(Sel,pattern)
-        
+
         self.writer.writerow(item)
         pass
 
