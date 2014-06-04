@@ -14,6 +14,7 @@ class DetailSpider(Spider):
 
     name = 'detail'
     allowed_domains = ["epa.gov.tw"]
+    main_urls = []
 
     patterns = {
         'DocType': make_span_pattern_string('lbDOCTYP'),
@@ -37,15 +38,16 @@ class DetailSpider(Spider):
         super(DetailSpider,self).__init__(*args,**kwargs)
 
         # read the hcode from the list/result.csv file and generate all start_urls
-        self.start_urls = [];
-
         with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
             reader = csv.DictReader(f)
 
             for row in reader:
                 hcode = row['Id']
                 url = "http://eiareport.epa.gov.tw/EIAWEB/10.aspx?hcode=%s" % (hcode)
-                self.start_urls.append(url)
+                self.main_urls.append(url)
+
+        first_url = self.main_urls.pop()
+        self.start_urls.append(first_url)
 
         self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
         header = ['Id'] + self.patterns.keys()
@@ -65,10 +67,19 @@ class DetailSpider(Spider):
         hcode = parse_qs(query_string)['hcode'][0]
 
         # go to the detail page
-        yield Request("http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
+        yield Request(  url="http://eiareport.epa.gov.tw/EIAWEB/10_0.aspx",
                         meta={'HCODE': hcode},
-                        callback=self.parse_detail,dont_filter=True)
+                        priority=100,
+                        callback=self.parse_detail,
+                        dont_filter=True)
 
+        # go to next hcode
+        if (len(self.main_urls)==0):
+            return
+            
+        next_url = self.main_urls.pop()
+        yield Request(  url=next_url,
+                        callback=self.parse)
         pass
 
     def parse_detail(self,response):
