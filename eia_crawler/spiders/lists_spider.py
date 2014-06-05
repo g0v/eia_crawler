@@ -3,10 +3,10 @@ from scrapy.spider import Spider
 from scrapy.selector import Selector
 from scrapy.http import FormRequest
 
-class ReportSpider(Spider):
-    LIST_FOLDER = 'results/list'
+class ListsSpider(Spider):
+    RESULTS_FOLDER = 'results'
 
-    name = "report"
+    name = "lists"
     allowed_domains = ["epa.gov.tw"]
     start_urls = [
         "http://eiareport.epa.gov.tw/EIAWEB/00.aspx"
@@ -24,16 +24,16 @@ class ReportSpider(Spider):
     }
 
     def __init__(self, *args, **kwargs):
-        super(ReportSpider,self).__init__(*args, **kwargs)
+        super(ListsSpider,self).__init__(*args, **kwargs)
 
-        self.fout = open('%s/%s.csv' % (self.LIST_FOLDER,'result'),'wb')
+        self.fout = open('%s/%s.csv' % (self.RESULTS_FOLDER,self.name),'wb')
         self.writer = csv.DictWriter(self.fout,self.patterns.keys())
         self.writer.writeheader()
 
         pass
 
     def __del__(self):
-        super(ReportSpider,self).__del()
+        super(ListsSpider,self).__del()
 
         self.fout.close()
 
