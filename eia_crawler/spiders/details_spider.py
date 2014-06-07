@@ -8,11 +8,10 @@ from urlparse import urlparse,parse_qs
 make_input_pattern_string = lambda id: "//input[contains(@id,'%s')]/@value" % (id)
 make_span_pattern_string = lambda id: "//span[contains(@id,'%s')]/text()" % (id)
 
-class DetailSpider(Spider):
-    LIST_FOLDER = 'results/list'
-    DETAIL_FOLDER = 'results/detail'
+class DetailsSpider(Spider):
+    RESULTS_FOLDER = 'results'
 
-    name = 'detail'
+    name = 'details'
     allowed_domains = ["epa.gov.tw"]
     main_urls = []
 
@@ -35,10 +34,10 @@ class DetailSpider(Spider):
     }
 
     def __init__(self, *args, **kwargs):
-        super(DetailSpider,self).__init__(*args,**kwargs)
+        super(DetailsSpider,self).__init__(*args,**kwargs)
 
-        # read the hcode from the list/result.csv file and generate all start_urls
-        with open("%s/%s" % (self.LIST_FOLDER,'result.csv')) as f:
+        # read the hcode from the results/lists.csv file and generate all start_urls
+        with open("%s/%s" % (self.RESULTS_FOLDER,'lists.csv')) as f:
             reader = csv.DictReader(f)
 
             for row in reader:
@@ -49,7 +48,7 @@ class DetailSpider(Spider):
         first_url = self.main_urls.pop()
         self.start_urls.append(first_url)
 
-        self.fout = open('%s/%s.csv' % (self.DETAIL_FOLDER,'result'),'wb')
+        self.fout = open('%s/%s.csv' % (self.RESULTS_FOLDER,self.name),'wb')
         header = ['Id'] + self.patterns.keys()
         self.writer = csv.DictWriter(self.fout,header)
         self.writer.writeheader()
@@ -57,7 +56,7 @@ class DetailSpider(Spider):
         pass
 
     def __del__(self):
-        super(DetailSpider,self).__del()
+        super(DetailsSpider,self).__del()
 
         self.fout.close()
         pass
@@ -76,7 +75,7 @@ class DetailSpider(Spider):
         # go to next hcode
         if (len(self.main_urls)==0):
             return
-            
+
         next_url = self.main_urls.pop()
         yield Request(  url=next_url,
                         callback=self.parse)
