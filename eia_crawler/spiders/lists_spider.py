@@ -17,9 +17,9 @@ class ListsSpider(Spider):
             'Id': "td/span[contains(@id,'HCODE')]/text()",
             'Agency': "td/span[contains(@id,'DST')]/text()",
             'Name':"td/span[contains(@id,'EDN')]/@title",
-            'DocType': "td/span[contains(@id,'DOCTYPE')]/text()",
+            'DocType': "td/span[contains(@id,'DOCTYPE')]/@title",
             'Taker': "td[6]/text()",
-            'Status': "td/span[contains(@id,'EXTP')]/text()",
+            'Status': "td/span[contains(@id,'EXTP')]/@title",
             'Notes': "td/span[contains(@id,'NOTES')]/@title"
     }
 
@@ -81,21 +81,21 @@ class ListsSpider(Spider):
         pass
 
     def parse(self,response):
-        # Entry the last page
+        # entry the last page
         yield self._make_form_request(response,'Last',self.parse_last_page_num)
 
-        # store page one items
+        # store first page
         items = self._make_report_list_items(response)
         self._write_report_list_items(items)
 
-        # entry the next page
+        # entry the other page
         yield self._make_form_request(response,2,self.parse_report_list)
 
         pass
 
     def parse_report_list(self,response):
         current = int(response.meta.get('current',1));
-        print "Current page:%d Last page: %d\n" %(current,self.last_page_num)
+        print "Current page: %d Last page: %d Progress: %f%%\n" % (current,self.last_page_num,((current*100.0)/self.last_page_num))
 
         items = self._make_report_list_items(response)
 
