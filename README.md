@@ -21,19 +21,19 @@ $ vagrant up
 ## 使用方式
 
 分為兩個步驟：
-+ Report -  將各分頁清單抓下來，目的是要得到環評書件案號。
++ Lists -  將各分頁清單抓下來，目的是要得到環評書件案號。
 
-+ Detail -  從清單中的案號，取得更詳細欄位。
++ Details -  從清單中的案號，取得更詳細欄位。
 
 ``` bash
-$ scrapy crawl report
+$ scrapy crawl lists
 
-$ scrapy crawl detail
+$ scrapy crawl details
 ```
 
 ## 產出結果
 
-+ [results/list/result.csv](results/list/result.csv)
++ [results/lists.csv](results/lists.csv)
 
 ``` csv
 Id, Agency, Name, DocType, Taker, Status, Notes
@@ -41,7 +41,7 @@ Id, Agency, Name, DocType, Taker, Status, Notes
 案號, 環評機關, 名稱, 類別, 承辦人, 審查進度,說明
 ```
 
-+ [results/detail/result.csv](results/detail/result.csv)
++ [results/details.csv](results/details.csv)
 
 ``` csv
 Id, DocTYpe, DevUnit, Region, DevCategory, Area, Size, Unit, Taker, Agency, SendDate, Status, ExamineDate, ExamineStatus, CommitteeDate, Notes
